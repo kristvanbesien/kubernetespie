@@ -1,0 +1,17 @@
+---
+- include: prepare.yaml
+  tags:
+  - prepare
+- include: firewall.yaml
+  tags: 
+  - firewall
+- include: etchosts.yaml
+  tags: 
+  - etchosts
+- include: update.yaml
+  tags:
+  - update
+  - install
+- include: kubernetes.yaml
+  tags:
+  - kubernetes

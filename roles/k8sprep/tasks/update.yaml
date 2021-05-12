@@ -1,0 +1,34 @@
+---
+- name: make sure we use the proxy
+  lineinfile:
+    regexp: '^proxy.*'
+    line: 'proxy=http://192.168.19.2:3128'
+    path: /etc/ostree/remotes.d/fedora-iot.conf
+
+- name: perform an ostree update
+  command: 
+    cmd: "rpm-ostree upgrade --unchanged-exit-77"
+  failed_when: ( result.rc not in [ 0, 77 ] )
+  register: result 
+  changed_when: result.rc == 0 
+  notify: reboot
+  
+- name: install stuff
+  command: 
+    argv: 
+      - rpm-ostree 
+      - install 
+      - --apply-live
+      - --idempotent
+      - --unchanged-exit-77
+      - python 
+      - python-pip 
+      - kubernetes-kubeadm 
+      - docker 
+      - ethtool 
+      - iproute-tc
+  failed_when: ( result.rc not in [ 0, 77 ] )
+  register: result 
+  changed_when: result.rc == 0 
+  notify: reboot 
+  

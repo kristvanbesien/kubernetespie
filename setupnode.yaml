@@ -1,0 +1,6 @@
+- name: Prepare a node to add to cluster
+  hosts: new_nodes
+
+  roles:
+  - role: k8sprep
+  

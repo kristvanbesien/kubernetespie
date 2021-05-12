@@ -1,0 +1,14 @@
+- name: setup local /etc/hosts
+  hosts: localhost
+  become: true
+
+  tasks:
+  - name: setup local etc hosts
+    include_role: 
+      name: k8sprep
+      tasks_from: etchosts.yaml
+    
+
+
+
+

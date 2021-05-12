@@ -1,0 +1,38 @@
+all:
+  hosts:
+    pi31:
+      ansible_host: "192.168.3.80"
+    pi32:
+      ansible_host: "192.168.3.81"
+    pi43:
+      ansible_host: "192.168.3.82"
+    pi44:
+      ansible_host: "192.168.3.83"
+    pi45:
+      ansible_host: "192.168.3.84"
+  children:
+    pies:
+      children:
+        pi3:
+        pi4:
+    pi3:
+      hosts:
+        pi31:
+        pi32:
+    pi4:
+      hosts:
+        pi43:
+        pi44:
+        pi45: 
+    masters:
+      hosts:
+        pi45:
+    workers:
+      hosts:
+        pi31:
+        pi32:
+        pi44:
+    new_nodes:
+      hosts:
+        pi43:
+        

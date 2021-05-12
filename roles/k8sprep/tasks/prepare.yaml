@@ -1,0 +1,56 @@
+---
+- name: Set the correct timezone
+  timezone:
+    name: Europe/Zurich
+
+- name: Set the correct hostname
+  hostname: 
+    name: "{{ inventory_hostname }}.{{ mydomain }}" 
+
+- name: Put SELinux in permissive mode, logging actions that would be blocked.
+  selinux:
+    policy: targeted
+    state: "{{ myselinuxstate }}"
+
+- name: disable zram swap
+  file:
+    path: /etc/systemd/zram-generator.conf      
+    state: file
+  notify: reboot
+
+- name: load br netfilter module
+  modprobe:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - overlay
+    - br_netfilter
+
+- name: sysctl settings needed for k8s
+  sysctl:
+    name: "{{ item }}"
+    value: 1
+    sysctl_set: yes
+    reload: yes
+  loop:
+  - net.bridge.bridge-nf-call-ip6tables 
+  - net.bridge.bridge-nf-call-iptables 
+  - net.ipv4.ip_forward
+
+- name: persist the module load of br_netfilter
+  copy:
+    dest: /etc/modules-load.d/k8s.conf
+    content: |
+      br_netfilter
+      overlay
+
+
+
+
+
+  
+ 
+
+
+  
+      

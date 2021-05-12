@@ -1,0 +1,19 @@
+---
+- name: Add host entries of all hosts 
+  lineinfile:
+    dest: "/etc/hosts"
+    regexp: ".*{{ item }}$"
+    line: "{{ hostvars[item].ansible_host }} {{ item }}.{{mydomain}} {{ item }}"
+    state: present
+  when: hostvars[item].ansible_default_ipv4 is defined
+  loop: "{{ groups.all }}"
+
+- name: Add extra host entries.
+  lineinfile:
+    dest: /etc/hosts
+    regexp: ".*{{ item.name }}$"
+    line: "{{ item.ip }} {{ item.longname }} {{ item.name }}"
+    state: present
+  loop: "{{ etc_hosts_items }} "
+  
+      

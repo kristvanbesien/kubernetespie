@@ -1,0 +1,7 @@
+ansible_python_interpreter: /usr/bin/python3
+ansible_user: root
+mydomain: wl.kri.st
+etc_hosts_items:
+  - name: kube
+    longname: kube.kri.st
+    ip: 192.168.3.84

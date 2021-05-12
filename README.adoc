@@ -1,0 +1,283 @@
+= Kubernetes on a Raspberry Pi
+
+This is how I build a Kubernetes Cluster on top of Raspberry Pies, running Fedora IOT.
+
+The main purpose of this was to learn kubernetes. 
+I am an infrastructure specialist, not a developper. 
+I wanted to get familiar with the internals of kubernetes, as I am often asked to solve diffecult issues customers incounter as they pussh the boundaries on our products.
+
+Why Fedora IOT? Well. Well, it just happens I am used to Fedora. 
+That is all. 
+
+The Hardware I used for this exercies are 3 Raspberry Pi 4 (with 8 Gb) and 2 Raspberry pi3.
+
+== Setup Fedora IOT
+
+Setting up fedora IOT was actually rather straightforward. 
+
+Just flash the image to an SD card. Put in the Pi, and start the Pi.
+
+[source, bash]
+----
+arm-image-installer --image=Fedora-IoT-34-20210429.1.aarch64.raw.xz --device=/dev/mmcblk0 --addkey ~/.ssh/id_rsa.pub --resizefs
+----
+
+After that the systems were prepared using an ansible playbook.
+
+I have prepared two playbooks for that.
+
+. setupnode.yaml
++
+This does all the preparatory work on a node. After running this all that would be needed is just running kubeadmin join...
+
+. localetchosts.yaml
++
+This just adds the names of the nodes, and any extra entries I need, to the local /etc/hosts file. 
+Exists just for convenience, until my DNS is up and running.
+
+== Setup kubernetes
+
+[INFO]
+==== 
+If you want to cleanup everythign to restert:
+
+[source,bash]
+----
+kubadm reset
+rm -rf .kube/cache/
+rm -rf /etc/cni/net.d
+iptables -F && iptables -t nat -F && iptables -t mangle -F &iptables -X
+----
+====
+
+[Warning]
+====
+Fedora IOT uses a read only filesystem for /usr.
+So you will need to add extra options via a config file.
+see: 
+https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/troubleshooting-kubeadm/
+
+Because a config file cannot be combined with other flags when executing the `kubeadm join` command you will need to add those to the config as well.
+This is not very well documented, and it took me some trial and error, and lots of googling to arrive at something that appeared to work.
+====
+
+This is the config file I used to create the cluster:
+
+.init.yaml
+----
+apiVersion: kubeadm.k8s.io/v1beta2
+kind: InitConfiguration
+nodeRegistration:
+  kubeletExtraArgs:
+    volume-plugin-dir: "/opt/libexec/kubernetes/kubelet-plugins/volume/exec/"  <1>
+  taints: 
+  - effect: PreferNoSchedule <2>
+    key: node-role.kubernetes.io/master
+---
+apiVersion: kubeadm.k8s.io/v1beta2
+kind: ClusterConfiguration
+controlPlaneEndpoint: "kube.kri.st:6443"
+networking:
+  podSubnet: "10.244.0.0/16" <3>
+controllerManager: 
+  extraArgs:
+    flex-volume-plugin-dir: "/opt/libexec/kubernetes/kubelet-plugins/volume/exec/"
+----
+<1> This is needed on Fedora IOT because the default is /usr/libexec/kubernetes.
+This will fail because /usr is read only
+<2> I want to permit normal pods to be scheduled on the control plane nodes, but only if needed.
+<3> This is the default subnet used by Flanel.
+
+Build a cluster with: 
+
+[source,bash]
+----
+kubeadm init  --config kcm.yaml
+----
+
+
+After a few minutes I have a cluster:
+
+----
+Your Kubernetes control-plane has initialized successfully!
+
+To start using your cluster, you need to run the following as a regular user:
+
+  mkdir -p $HOME/.kube
+  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+Alternatively, if you are the root user, you can run:
+
+  export KUBECONFIG=/etc/kubernetes/admin.conf
+
+You should now deploy a pod network to the cluster.
+Run "kubectl apply -f [podnetwork].yaml" with one of the options listed at:
+  https://kubernetes.io/docs/concepts/cluster-administration/addons/
+
+You can now join any number of control-plane nodes by copying certificate authorities
+and service account keys on each node and then running the following as root:
+
+  kubeadm join kube.kri.st:6443 --token k5hmfv.v8vapjw2ml3k5wge \ <1>
+    --discovery-token-ca-cert-hash sha256:b36e795eecdba2e5f2c8b7947630bc6b676d43e52036c3548e8f5b30d5733e41 \ <1>
+    --control-plane
+
+Then you can join any number of worker nodes by running the following on each as root:
+
+kubeadm join kube.kri.st:6443 --token k5hmfv.v8vapjw2ml3k5wge \
+    --discovery-token-ca-cert-hash sha256:b36e795eecdba2e5f2c8b7947630bc6b676d43e52036c3548e8f5b30d5733e41
+----
+<1> Make a note of the token and the hash. You will need this later.
+
+Lets see what we have now:
+
+[source, bash]
+----
+export KUBECONFIG=/etc/kubernetes/admin.conf
+kubectl get pods --all-namespaces
+----
+
+.output
+----
+NAMESPACE     NAME                                     READY   STATUS    RESTARTS   AGE
+kube-system   coredns-74ff55c5b-mh4nw                  0/1     Pending   0          88s
+kube-system   coredns-74ff55c5b-rmdzp                  0/1     Pending   0          88s
+kube-system   etcd-pi45.wl.kri.st                      1/1     Running   0          8s
+kube-system   kube-apiserver-pi45.wl.kri.st            1/1     Running   0          80s
+kube-system   kube-controller-manager-pi45.wl.kri.st   1/1     Running   0          14s
+kube-system   kube-proxy-lk5gc                         1/1     Running   0          89s
+kube-system   kube-scheduler-pi45.wl.kri.st            0/1     Pending   0          2s
+----
+
+Create a certificate key.
+This we will need later when joining more nodes.
+
+[source, bash]
+---- 
+kubeadm init phase upload-certs --upload-certs
+----
+
+.output
+[source,bash]
+----
+I0510 16:00:23.492745   16054 version.go:254] remote version is much newer: v1.21.0; falling back to: stable-1.20
+
+[upload-certs] Storing the certificates in Secret "kubeadm-certs" in the "kube-system" Namespace
+[upload-certs] Using certificate key:
+53082908ffae4742680d5f2fe3ab153d7dfec76c4bef2c716813460efcbb5cfc <1>
+----
+<1> make a note of this.
+
+Kubernetes needs a network plug in. 
+I choose to use Flannel.
+
+----
+curl -O https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+kubectl apply -f kube-flannel.yml
+----
+
+Check again what we have.
+
+[source,bash]
+----
+kubectl get pods --all-namespaces
+----
+
+.output
+[source,bash]
+----
+NAMESPACE     NAME                                     READY   STATUS    RESTARTS   AGE
+kube-system   coredns-74ff55c5b-nc78l                  0/1     Running   0          21m
+kube-system   coredns-74ff55c5b-r68jw                  0/1     Running   0          21m
+kube-system   etcd-pi45.wl.kri.st                      1/1     Running   0          20m
+kube-system   kube-apiserver-pi45.wl.kri.st            1/1     Running   1          20m
+kube-system   kube-controller-manager-pi45.wl.kri.st   1/1     Running   0          21m
+kube-system   kube-flannel-ds-7rrq2                    1/1     Running   0          30s
+kube-system   kube-proxy-dr9ng                         1/1     Running   0          21m
+kube-system   kube-scheduler-pi45.wl.kri.st            1/1     Running   0          20m
+----
+
+This is starting to look good.
+
+== Joining workers
+
+.join.yaml
+[source,yaml]
+----
+apiVersion: kubeadm.k8s.io/v1beta2
+kind: JoinConfiguration
+discovery:
+  bootstrapToken:
+    apiServerEndpoint: kube.kri.st:6443
+    token: lzmof1.0z5l6hkwbvdxsakk <1>
+    caCertHashes: 
+    - sha256:b36e795eecdba2e5f2c8b7947630bc6b676d43e52036c3548e8f5b30d5733e41 <1>
+    unsafeSkipCAVerification: true
+  timeout: 5m0s
+nodeRegistration:
+  kubeletExtraArgs:
+    volume-plugin-dir: "/opt/libexec/kubernetes/kubelet-plugins/volume/exec/"
+----
+<1> Replace with the values you noted earlier.
+
+You can now join the cluster...
+
+[source,bash]
+----
+kubadm join --config join.yaml
+----
+
+
+== Joining the other control plane nodes
+
+.join.yaml
+[source,yaml]
+----
+apiVersion: kubeadm.k8s.io/v1beta2
+kind: JoinConfiguration
+discovery:
+  bootstrapToken:
+    apiServerEndpoint: kube.kri.st:6443
+    token: lzmof1.0z5l6hkwbvdxsakk <1>
+    caCertHashes: 
+    - sha256:b36e795eecdba2e5f2c8b7947630bc6b676d43e52036c3548e8f5b30d5733e41 <1>
+    unsafeSkipCAVerification: true
+  timeout: 5m0s
+nodeRegistration:
+  kubeletExtraArgs:
+    volume-plugin-dir: "/opt/libexec/kubernetes/kubelet-plugins/volume/exec/"
+controlPlane:
+  certificateKey: 8383f24ebd1861f96c381b949c72b172390ffc608bb3b8e5eba131f773eb12ce <1>
+----
+<1> Replace these with values you noted earlier.
+
+
+[NOTE]
+====
+In case to much time has passed since you boostrapped the cluster and the moment you add more nodes you will need to recreate the 
+certificate Key and the token.
+
+[source,bash]
+----
+kubeadm init phase upload-certs --upload-certs
+kubeadm token create
+----
+
+
+If you did not write down the CA Certificate Hash that init output you can recalculate it. 
+(See here: https://blog.scottlowe.org/2019/07/12/calculating-ca-certificate-hash-for-kubeadm/)
+
+[source,bash]
+----
+openssl x509 -in /etc/kubernetes/pki/ca.crt -pubkey -noout |
+openssl pkey -pubin -outform DER |
+openssl dgst -sha256
+----
+====
+
+
+
+Once the cluster up I added
+
+- dashboard
+- ingress controller (nginx)

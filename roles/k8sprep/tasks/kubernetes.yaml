@@ -1,0 +1,29 @@
+---
+
+- name: Start Kubelet
+  service: 
+    name: kubelet
+    enabled: true
+    state: started
+
+- name: Enable Docker
+  service:
+    name: docker
+    enabled: true
+    state: started
+  notify: restart docker
+
+- name: configure docker
+  copy:
+    dest: /etc/docker/daemon.json
+    content: |
+      {
+        "storage-driver": "overlay2"
+      }
+  notify: restart docker
+
+    
+
+    
+
+

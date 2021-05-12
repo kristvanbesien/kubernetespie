@@ -1,0 +1,9 @@
+- name: reboot
+  reboot:
+  throttle: 1
+
+- name: restart docker
+  service: 
+    name: docker
+    enabled: true
+    state: restarted 
