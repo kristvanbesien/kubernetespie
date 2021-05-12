@@ -1,7 +1,7 @@
 ansible_python_interpreter: /usr/bin/python3
 ansible_user: root
-mydomain: wl.kri.st
+mydomain: example.com
 etc_hosts_items:
   - name: kube
-    longname: kube.kri.st
+    longname: api.example.com
     ip: 192.168.3.84

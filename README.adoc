@@ -76,7 +76,7 @@ nodeRegistration:
 ---
 apiVersion: kubeadm.k8s.io/v1beta2
 kind: ClusterConfiguration
-controlPlaneEndpoint: "kube.kri.st:6443"
+controlPlaneEndpoint: "api.example.com:6443"
 networking:
   podSubnet: "10.244.0.0/16" <3>
 controllerManager: 
@@ -118,13 +118,13 @@ Run "kubectl apply -f [podnetwork].yaml" with one of the options listed at:
 You can now join any number of control-plane nodes by copying certificate authorities
 and service account keys on each node and then running the following as root:
 
-  kubeadm join kube.kri.st:6443 --token k5hmfv.v8vapjw2ml3k5wge \ <1>
+  kubeadm join api.example.com:6443 --token k5hmfv.v8vapjw2ml3k5wge \ <1>
     --discovery-token-ca-cert-hash sha256:b36e795eecdba2e5f2c8b7947630bc6b676d43e52036c3548e8f5b30d5733e41 \ <1>
     --control-plane
 
 Then you can join any number of worker nodes by running the following on each as root:
 
-kubeadm join kube.kri.st:6443 --token k5hmfv.v8vapjw2ml3k5wge \
+kubeadm join api.example.com:6443 --token k5hmfv.v8vapjw2ml3k5wge \
     --discovery-token-ca-cert-hash sha256:b36e795eecdba2e5f2c8b7947630bc6b676d43e52036c3548e8f5b30d5733e41
 ----
 <1> Make a note of the token and the hash. You will need this later.
@@ -142,11 +142,11 @@ kubectl get pods --all-namespaces
 NAMESPACE     NAME                                     READY   STATUS    RESTARTS   AGE
 kube-system   coredns-74ff55c5b-mh4nw                  0/1     Pending   0          88s
 kube-system   coredns-74ff55c5b-rmdzp                  0/1     Pending   0          88s
-kube-system   etcd-pi45.wl.kri.st                      1/1     Running   0          8s
-kube-system   kube-apiserver-pi45.wl.kri.st            1/1     Running   0          80s
-kube-system   kube-controller-manager-pi45.wl.kri.st   1/1     Running   0          14s
+kube-system   etcd-pi45.example.com                    1/1     Running   0          8s
+kube-system   kube-apiserver-pi45.example.com          1/1     Running   0          80s
+kube-system   kube-controller-manager-pi45.example.com 1/1     Running   0          14s
 kube-system   kube-proxy-lk5gc                         1/1     Running   0          89s
-kube-system   kube-scheduler-pi45.wl.kri.st            0/1     Pending   0          2s
+kube-system   kube-scheduler-pi45.example.com          0/1     Pending   0          2s
 ----
 
 Create a certificate key.
@@ -189,12 +189,12 @@ kubectl get pods --all-namespaces
 NAMESPACE     NAME                                     READY   STATUS    RESTARTS   AGE
 kube-system   coredns-74ff55c5b-nc78l                  0/1     Running   0          21m
 kube-system   coredns-74ff55c5b-r68jw                  0/1     Running   0          21m
-kube-system   etcd-pi45.wl.kri.st                      1/1     Running   0          20m
-kube-system   kube-apiserver-pi45.wl.kri.st            1/1     Running   1          20m
-kube-system   kube-controller-manager-pi45.wl.kri.st   1/1     Running   0          21m
+kube-system   etcd-pi45.example.com                    1/1     Running   0          20m
+kube-system   kube-apiserver-pi45.example.com          1/1     Running   1          20m
+kube-system   kube-controller-manager-pi45.example.com 1/1     Running   0          21m
 kube-system   kube-flannel-ds-7rrq2                    1/1     Running   0          30s
 kube-system   kube-proxy-dr9ng                         1/1     Running   0          21m
-kube-system   kube-scheduler-pi45.wl.kri.st            1/1     Running   0          20m
+kube-system   kube-scheduler-pi45.example.com          1/1     Running   0          20m
 ----
 
 This is starting to look good.
@@ -208,7 +208,7 @@ apiVersion: kubeadm.k8s.io/v1beta2
 kind: JoinConfiguration
 discovery:
   bootstrapToken:
-    apiServerEndpoint: kube.kri.st:6443
+    apiServerEndpoint: api.example.com:6443
     token: lzmof1.0z5l6hkwbvdxsakk <1>
     caCertHashes: 
     - sha256:b36e795eecdba2e5f2c8b7947630bc6b676d43e52036c3548e8f5b30d5733e41 <1>
@@ -237,7 +237,7 @@ apiVersion: kubeadm.k8s.io/v1beta2
 kind: JoinConfiguration
 discovery:
   bootstrapToken:
-    apiServerEndpoint: kube.kri.st:6443
+    apiServerEndpoint: api.example.com:6443
     token: lzmof1.0z5l6hkwbvdxsakk <1>
     caCertHashes: 
     - sha256:b36e795eecdba2e5f2c8b7947630bc6b676d43e52036c3548e8f5b30d5733e41 <1>
@@ -277,7 +277,4 @@ openssl dgst -sha256
 
 
 
-Once the cluster up I added
-
-- dashboard
-- ingress controller (nginx)
+Once the cluster was up I added other things I needed, like a dashboard, ingress controllers etc...
