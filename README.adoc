@@ -37,9 +37,9 @@ Exists just for convenience, until my DNS is up and running.
 
 == Setup kubernetes
 
-[INFO]
+[TIP]
 ==== 
-If you want to cleanup everythign to restert:
+If you want to cleanup everything to restart:
 
 [source,bash]
 ----
@@ -50,7 +50,7 @@ iptables -F && iptables -t nat -F && iptables -t mangle -F &iptables -X
 ----
 ====
 
-[Warning]
+[IMPORTANT]
 ====
 Fedora IOT uses a read only filesystem for /usr.
 So you will need to add extra options via a config file.
@@ -252,7 +252,7 @@ controlPlane:
 <1> Replace these with values you noted earlier.
 
 
-[NOTE]
+[TIP]
 ====
 In case to much time has passed since you boostrapped the cluster and the moment you add more nodes you will need to recreate the 
 certificate Key and the token.
