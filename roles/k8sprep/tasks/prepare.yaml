@@ -15,9 +15,13 @@
 - name: disable zram swap
   file:
     path: /etc/systemd/zram-generator.conf      
-    state: file
+    state: touch
   notify: reboot
 
+- name: disable zezere
+  service:
+    name: zezere_ignition.timer
+    enabled: false
 - name: load br netfilter module
   modprobe:
     name: "{{ item }}"

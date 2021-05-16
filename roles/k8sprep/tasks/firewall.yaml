@@ -1,39 +1,6 @@
 ---
-- name: Add ports to Firewall on Masters.
-  firewalld:
-    zone: public
-    port: "{{ item }}"
-    permanent: yes
-    immediate: yes
-    state: enabled
-  loop:
-    - 6443/tcp
-    - 2379-2380/tcp
-    - 10251/tcp
-    - 10252/tcp
-    - 10255/tcp
-  when: "'masters' in group_names"
-
-- name: Add ports to Firewall on Nodes
-  firewalld:
-    zone: public
-    port: "{{ item }}"
-    permanent: yes
-    immediate: yes
-    state: enabled
-  loop:
-    - 10250/tcp
-    - 30000-32757/tcp
-    - 8285/udp
-    - 8472/udp
-    - 7946/tcp
-    - 7946/udp 
-
-- name: set masquerade
-  firewalld:
-    zone: public
-    masquerade: "yes"
-    permanent: yes
-    immediate: yes
-    state: enabled
-      
+- name: Disable the firewall
+  service:
+    name: firewalld
+    state: stopped
+    enabled: false

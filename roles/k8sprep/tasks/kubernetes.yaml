@@ -1,26 +1,70 @@
 ---
+- name: Add kubernetes Repo
+  yum_repository:
+    file: kubernetes
+    name: kubernetes
+    baseurl: "https://packages.cloud.google.com/yum/repos/kubernetes-el7-aarch64"
+    gpgcheck: yes
+    gpgkey: "https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg"
+    description: "kubernetes packages direct from the source"
 
-- name: Start Kubelet
-  service: 
-    name: kubelet
-    enabled: true
-    state: started
+- name: Add cri-o Repo
+  yum_repository:
+    file: libcontainers
+    name: libcontainers_stable
+    description: "Stable Releases of Upstream github.com/containers packages (Fedora_34)"
+    baseurl: "{{ crio_repo_base }}/{{ fedora_version }}/"
+    gpgcheck: yes
+    gpgkey: "{{ crio_repo_base }}/{{ fedora_version }}/repodata/repomd.xml.key"
 
-- name: Enable Docker
+- name: Add cri-o Repo
+  yum_repository:
+    file: libcontainers_crio
+    name: libcontainers_stable_crio
+    description: "Stable Releases of Upstream github.com/containers packages (Fedora_34)"
+    baseurl: "{{crio_repo_base}}:/cri-o:/{{crio_version}}/{{ fedora_version }}/"
+    gpgcheck: yes
+    gpgkey: "{{crio_repo_base}}:/cri-o:/{{crio_version}}/{{ fedora_version }}/repodata/repomd.xml.key"
+
+
+- name: install stuff
+  command: 
+    argv: 
+      - rpm-ostree 
+      - install 
+      - --idempotent
+      - --unchanged-exit-77
+      - cri-o
+      - kubelet
+      - kubeadm
+      - kubectl
+  failed_when: ( result.rc not in [ 0, 77 ] )
+  register: result 
+  changed_when: result.rc == 0 
+  notify: reboot 
+
+- meta: flush_handlers
+
+
+- name: Set correct cgroup driver for kubelet
+  lineinfile:
+    path: /etc/sysconfig/kubelet
+    regexp: "^KUBELET_EXTRA_ARGS=.*"
+    line: "KUBELET_EXTRA_ARGS=--cgroup-driver=systemd"
+
+- name: enable crio and kubelet services
   service:
-    name: docker
-    enabled: true
+    name: "{{ item }}"
     state: started
-  notify: restart docker
+    enabled: true
+  loop:
+    - cri-o
+    - kubelet
 
-- name: configure docker
-  copy:
-    dest: /etc/docker/daemon.json
-    content: |
-      {
-        "storage-driver": "overlay2"
-      }
-  notify: restart docker
+
+
+
+
 
     
 

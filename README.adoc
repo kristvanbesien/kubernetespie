@@ -224,7 +224,7 @@ You can now join the cluster...
 
 [source,bash]
 ----
-kubadm join --config join.yaml
+kubeadm join --config join.yaml
 ----
 
 

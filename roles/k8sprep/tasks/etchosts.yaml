@@ -5,7 +5,7 @@
     regexp: ".*{{ item }}$"
     line: "{{ hostvars[item].ansible_host }} {{ item }}.{{mydomain}} {{ item }}"
     state: present
-  when: hostvars[item].ansible_default_ipv4 is defined
+  when: hostvars[item].ansible_host is defined
   loop: "{{ groups.all }}"
 
 - name: Add extra host entries.

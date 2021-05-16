@@ -1,0 +1,3 @@
+crio_version: 1.21
+fedora_version: Fedora_34
+crio_repo_base: https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable
