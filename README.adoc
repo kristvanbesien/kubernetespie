@@ -6,8 +6,6 @@ The main purpose of this was to learn kubernetes.
 I am an infrastructure specialist, not a developper. 
 I wanted to get familiar with the internals of kubernetes, as I am often asked to solve diffecult issues customers incounter as they pussh the boundaries on our products.
 
-Why Fedora IOT? Well. Well, it just happens I am used to Fedora. 
-That is all. 
 
 The Hardware I used for this exercies are 3 Raspberry Pi 4 (with 8 Gb) and 2 Raspberry pi3.
 
