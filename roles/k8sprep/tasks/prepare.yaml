@@ -13,15 +13,17 @@
     state: "{{ myselinuxstate }}"
 
 - name: disable zram swap
-  file:
-    path: /etc/systemd/zram-generator.conf      
-    state: touch
+  copy:
+    dest: /etc/systemd/zram-generator.conf      
+    content: |
+      # Disabled ZRAM Swap
   notify: reboot
 
 - name: disable zezere
   service:
     name: zezere_ignition.timer
     enabled: false
+
 - name: load br netfilter module
   modprobe:
     name: "{{ item }}"
@@ -48,6 +50,12 @@
       br_netfilter
       overlay
 
+- name: Add a proxy for DNF
+  lineinfile:
+    dest: etc/dnf/dnf.conf
+    regexp:  "^proxy.*"
+    line: "proxy={{ dnf_proxy }}"
+    create: yes
 
 
 
