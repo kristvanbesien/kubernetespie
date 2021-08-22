@@ -1,0 +1,8 @@
+- name: Join worker node to the cluster
+  hosts: workers
+
+  tasks:
+  - name: Join task
+    include_role: 
+      name: k8sprep
+      tasks_from: joinnode.yaml
