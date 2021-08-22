@@ -1,0 +1,17 @@
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: InitConfiguration
+nodeRegistration:
+  kubeletExtraArgs:
+    volume-plugin-dir: "/opt/libexec/kubernetes/kubelet-plugins/volume/exec/"
+  taints:
+  - effect: PreferNoSchedule
+    key: node-role.kubernetes.io/master
+---
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: ClusterConfiguration
+controlPlaneEndpoint: "api.example.com:6443"
+networking:
+  podSubnet: "{{ kube_network }}"
+controllerManager:
+  extraArgs:
+    flex-volume-plugin-dir: "/opt/libexec/kubernetes/kubelet-plugins/volume/exec/"

@@ -2,3 +2,4 @@ mydomain: example.com
 myselinuxstate: permissive
 timezone: Europe/Zurich
 proxy: http://192.168.19.2:3128
+kube_network: 10.244.0.0/16
