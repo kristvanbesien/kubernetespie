@@ -7,7 +7,7 @@
   hostname: 
     name: "{{ inventory_hostname }}.{{ mydomain }}" 
 
-- name: Put SELinux in permissive mode, logging actions that would be blocked.
+- name: Put SELinux in {{ myselinuxstate }} mode
   selinux:
     policy: targeted
     state: "{{ myselinuxstate }}"
