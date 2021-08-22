@@ -10,7 +10,7 @@
     register: join_command
     delegate_to: "{{ groups['masters'][0] }}"
 
-  - name: join the node to the cluster
+  - name: join the worker node to the cluster
     command: "{{ join_command.stdout_lines[0] }}"
 
   when: "'ok' not in healthz.content"

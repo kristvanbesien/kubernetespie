@@ -5,4 +5,4 @@
   - name: Join task
     include_role: 
       name: k8sprep
-      tasks_from: joinnode.yaml
+      tasks_from: joinworker.yaml
