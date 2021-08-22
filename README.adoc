@@ -33,6 +33,10 @@ This does all the preparatory work on a node. After running this all that would 
 This just adds the names of the nodes, and any extra entries I need, to the local /etc/hosts file. 
 Exists just for convenience, until my DNS is up and running.
 
+. joinnode.yaml
++
+This just adds a worker node to the cluster (if not already joined).
+
 == Setup kubernetes
 
 [TIP]
@@ -86,11 +90,12 @@ This will fail because /usr is read only
 <2> I want to permit normal pods to be scheduled on the control plane nodes, but only if needed.
 <3> This is the default subnet used by Flanel.
 
-Build a cluster with: 
+The `setupnode.yaml` playbook will copy the above config to the master node.
+Once the playbook is completed, SSH to the master as `root` and build a cluster with: 
 
 [source,bash]
 ----
-kubeadm init  --config kcm.yaml
+kubeadm init --config kube-init.yaml
 ----
 
 
@@ -199,32 +204,7 @@ This is starting to look good.
 
 == Joining workers
 
-.join.yaml
-[source,yaml]
-----
-apiVersion: kubeadm.k8s.io/v1beta2
-kind: JoinConfiguration
-discovery:
-  bootstrapToken:
-    apiServerEndpoint: api.example.com:6443
-    token: lzmof1.0z5l6hkwbvdxsakk <1>
-    caCertHashes: 
-    - sha256:b36e795eecdba2e5f2c8b7947630bc6b676d43e52036c3548e8f5b30d5733e41 <1>
-    unsafeSkipCAVerification: true
-  timeout: 5m0s
-nodeRegistration:
-  kubeletExtraArgs:
-    volume-plugin-dir: "/opt/libexec/kubernetes/kubelet-plugins/volume/exec/"
-----
-<1> Replace with the values you noted earlier.
-
-You can now join the cluster...
-
-[source,bash]
-----
-kubeadm join --config join.yaml
-----
-
+Run the playbook `joinworker.yaml`.
 
 == Joining the other control plane nodes
 
