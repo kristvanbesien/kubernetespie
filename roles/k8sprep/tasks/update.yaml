@@ -2,8 +2,9 @@
 - name: make sure we use the proxy
   lineinfile:
     regexp: '^proxy.*'
-    line: 'proxy=http://192.168.19.2:3128'
+    line: 'proxy={{ proxy }}'
     path: /etc/ostree/remotes.d/fedora-iot.conf
+  when: proxy is defined
 
 - name: perform an ostree update
   command: 

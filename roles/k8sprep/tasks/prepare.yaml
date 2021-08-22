@@ -1,7 +1,7 @@
 ---
 - name: Set the correct timezone
   timezone:
-    name: Europe/Zurich
+    name: "{{ timezone }}"
 
 - name: Set the correct hostname
   hostname: 
@@ -52,10 +52,11 @@
 
 - name: Add a proxy for DNF
   lineinfile:
-    dest: etc/dnf/dnf.conf
+    dest: /etc/dnf/dnf.conf
     regexp:  "^proxy.*"
     line: "proxy={{ dnf_proxy }}"
     create: yes
+  when: proxy is defined
 
 
 
