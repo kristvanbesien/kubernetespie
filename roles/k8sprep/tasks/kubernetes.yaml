@@ -61,13 +61,8 @@
     - cri-o
     - kubelet
 
-
-
-
-
-
-    
-
-    
-
-
+- name: copy the inital cluster configuration to a master
+  template:
+    src: templates/kube-init.yaml.j2
+    dest: /root/kube-init.yaml
+  when: "'masters' in group_names"

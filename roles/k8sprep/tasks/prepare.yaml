@@ -1,13 +1,13 @@
 ---
 - name: Set the correct timezone
   timezone:
-    name: Europe/Zurich
+    name: "{{ timezone }}"
 
 - name: Set the correct hostname
   hostname: 
     name: "{{ inventory_hostname }}.{{ mydomain }}" 
 
-- name: Put SELinux in permissive mode, logging actions that would be blocked.
+- name: Put SELinux in {{ myselinuxstate }} mode
   selinux:
     policy: targeted
     state: "{{ myselinuxstate }}"
@@ -35,7 +35,7 @@
 - name: sysctl settings needed for k8s
   sysctl:
     name: "{{ item }}"
-    value: 1
+    value: '1'
     sysctl_set: yes
     reload: yes
   loop:
@@ -52,10 +52,11 @@
 
 - name: Add a proxy for DNF
   lineinfile:
-    dest: etc/dnf/dnf.conf
+    dest: /etc/dnf/dnf.conf
     regexp:  "^proxy.*"
     line: "proxy={{ dnf_proxy }}"
     create: yes
+  when: proxy is defined
 
 
 

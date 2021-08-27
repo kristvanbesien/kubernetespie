@@ -1,0 +1,16 @@
+- name: check if the node is already joined to some cluster
+  uri:
+    url: http://localhost:10248/healthz
+    return_content: yes
+  register: healthz
+
+- block:
+  - name: generate join token on the master
+    command: kubeadm token create --print-join-command
+    register: join_command
+    delegate_to: "{{ groups['masters'][0] }}"
+
+  - name: join the worker node to the cluster
+    command: "{{ join_command.stdout_lines[0] }}"
+
+  when: "'ok' not in healthz.content"
